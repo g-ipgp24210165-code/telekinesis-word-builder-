@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Telekinesis Word Builder</title>
+<style>
+:root{--ink:#282456;--pink:#ff75b8;--cyan:#70f5e9;--yellow:#ffe76b;--purple:#a78bfa;--green:#b4ff8b}
+*{box-sizing:border-box}body{margin:0;padding:15px;font-family:"Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:radial-gradient(circle at 8% 8%,#fff9b5,transparent 30%),radial-gradient(circle at 95% 10%,#ffb6d9,transparent 30%),linear-gradient(135deg,#9df4ed,#bdc9ff 55%,#e8caff);min-height:100vh}
+.app{max-width:1180px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}h1{margin:0;color:#6544cb;font-size:clamp(1.7rem,4vw,3rem);text-shadow:2px 3px white}header p{margin:6px 0 0;font-weight:800}.badges{display:flex;gap:8px;flex-wrap:wrap}.badge{background:white;border-radius:99px;padding:9px 13px;font-weight:900;border:2px solid white}
+.layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,.8fr);gap:14px}.panel{background:#ffffffc7;border:3px solid white;border-radius:23px;overflow:hidden;box-shadow:0 12px 28px #574a9320}.playhead{padding:12px 16px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:900}#cameraStatus{font-size:.8rem;color:#62618b}
+.stage{position:relative;aspect-ratio:4/3;overflow:hidden;background:linear-gradient(135deg,#8eeaf2,#bba7ff)}video{position:absolute;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:.65}canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.hud{position:absolute;z-index:2;top:3%;left:4%;right:4%;text-align:center;background:#fffffff0;border:3px solid white;border-radius:19px;padding:9px;box-shadow:0 5px 0 #6254a322}.small{font-size:.75rem;font-weight:1000;letter-spacing:.1em;color:#8060da}#prompt{font-size:clamp(1rem,2.8vw,1.65rem);font-weight:1000;margin-top:3px}#hint{font-size:.82rem;font-weight:750;color:#68648d;margin-top:3px}
+.slots{position:absolute;z-index:2;top:30%;left:5%;right:5%;display:flex;justify-content:center;gap:8px}.slot{width:clamp(42px,9vw,68px);height:clamp(48px,10vw,72px);border:3px dashed #7969ca;border-radius:15px;background:#ffffffc9;display:flex;align-items:center;justify-content:center;font-size:clamp(1.4rem,4vw,2.3rem);font-weight:1000;color:#5034ad}.slot.filled{border-style:solid;background:var(--yellow);border-color:white}
+.letters{position:absolute;z-index:2;left:4%;right:4%;bottom:7%;display:flex;justify-content:center;align-items:center;gap:9px;flex-wrap:wrap;min-height:95px}.letter{width:clamp(51px,10vw,77px);height:clamp(56px,11vw,83px);border:3px solid white;border-radius:21px;background:var(--pink);box-shadow:0 7px 0 #bd4d90;display:flex;align-items:center;justify-content:center;font-size:clamp(1.6rem,4.5vw,2.5rem);font-weight:1000;color:#38265d;cursor:grab;touch-action:none;user-select:none}.letter:nth-child(3n+2){background:var(--cyan);box-shadow:0 7px 0 #41a6ac}.letter:nth-child(3n){background:var(--yellow);box-shadow:0 7px 0 #c3a932}.letter.selected,.letter.hovered{transform:translateY(-8px) scale(1.07);outline:4px solid white}.letter.used{opacity:.28;pointer-events:none}
+.modal{position:absolute;inset:0;z-index:5;background:#423a79b8;display:flex;align-items:center;justify-content:center;padding:15px;text-align:center}.card{max-width:430px;background:white;border:4px solid var(--yellow);border-radius:25px;padding:22px;box-shadow:0 10px 0 #6b58b855}.card h2{font-size:clamp(1.7rem,5vw,2.4rem);margin:0 0 8px;color:#6a45d4}.card p{line-height:1.5;font-weight:700}
+button{border:0;border-radius:14px;background:var(--yellow);color:#3c326c;padding:12px 16px;font:inherit;font-weight:1000;cursor:pointer;box-shadow:0 5px 0 #c2a631}#startBtn{background:var(--green);box-shadow:0 5px 0 #64b34b}.hidden{display:none!important}.sidebar{padding:17px;display:flex;flex-direction:column;gap:13px}.sidebar h2{margin:0;color:#6a45d4}.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:white;border:2px solid #f4f0ff;border-radius:15px;padding:11px}.stat span{display:block;font-size:.8rem;font-weight:800;color:#77769d}.stat strong{font-size:1.5rem;color:#4d398e}#lives{color:#ef559b;letter-spacing:2px}#message{background:white;border:2px solid #f0eaff;border-radius:15px;padding:11px;min-height:48px;font-weight:900;line-height:1.4}.instructions{font-size:.9rem;line-height:1.55;font-weight:700}.instructions b{color:#704bd2}.controls{display:flex;gap:8px;flex-wrap:wrap}.controls button{flex:1}.note{font-size:.76rem;line-height:1.45;color:#696991;font-weight:650}footer{text-align:center;font-size:.76rem;font-weight:700;color:#66638b;margin:13px}
+@media(max-width:820px){body{padding:9px}.layout{grid-template-columns:1fr}.sidebar{padding:13px}.stage{aspect-ratio:4/3}.hud{padding:7px}.slots{gap:6px}.letters{gap:7px}}
+</style>
+</head>
+<body><div class="app">
+<header><div><h1>🧠 Telekinesis Word Builder</h1><p>✨ MIND FORCE • English Phonics • Year 1</p></div><div class="badges"><div class="badge">⭐ Score: <span id="topScore">0</span></div><div class="badge">💖 Lives: <span id="topLives">3</span></div></div></header>
+<div class="layout"><section class="panel"><div class="playhead"><span>🪄 Use your mind force!</span><span id="cameraStatus">Camera not started</span></div><div class="stage" id="stage">
+<video id="webcam" autoplay playsinline muted></video><canvas id="fx"></canvas>
+<div class="hud"><div class="small" id="mission">MISSION 1 / 10</div><div id="prompt">Build the word!</div><div id="hint">Move your index finger to select a letter.</div></div>
+<div class="slots" id="slots"></div><div class="letters" id="letters"></div>
+<div class="modal" id="intro"><div class="card"><h2>✨ Ready, Mind Master?</h2><p>Use your index finger as your mind force! Move your finger over a letter to select it, then move to an empty box to place it.</p><p>Arrange the letters in the correct order to spell the word. You can also click or drag letters with your mouse.</p><button id="startBtn">START MIND TRAINING 🚀</button><p class="note">The webcam is needed for hand control. Allow camera access when your browser asks.</p></div></div>
+<div class="modal hidden" id="end"><div class="card"><h2 id="endTitle">Great job!</h2><p id="endText"></p><button id="againBtn">PLAY AGAIN 🔄</button></div></div>
+</div></section>
+<aside class="panel sidebar"><h2>🌟 Mind Master Stats</h2><div class="stats"><div class="stat"><span>Score</span><strong id="score">0</strong></div><div class="stat"><span>Words built</span><strong id="builtCount">0/10</strong></div><div class="stat"><span>Lives</span><strong id="lives">💖💖💖</strong></div><div class="stat"><span>Mission</span><strong id="progress">1/10</strong></div></div>
+<div id="message" role="status">Press Start Mind Training to begin.</div><div class="instructions"><b>How to play</b><br>1. Show your hand to the webcam.<br>2. Move your index finger over a letter to select it.<br>3. Move your finger to an empty box to place the letter.<br>4. Put the letters in the correct order to build the word.<br><br><b>Mouse option:</b> Click a letter, then click an empty box.</div>
+<div class="controls"><button id="soundBtn">🔊 Sound: ON</button><button id="resetBtn" disabled>↩ Clear word</button></div><p class="note">Keep your hand clearly visible in good lighting. If hand control does not work, use your mouse or touch screen. MediaPipe loads from a CDN, so an internet connection is required.</p></aside></div><footer>Telekinesis Word Builder • HTML + CSS + JavaScript + MediaPipe Hands</footer></div>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script>
+(()=> {
+const bank=[
+{word:'SUN',clue:'Build the word: ☀️ The bright star in the sky.'},
+{word:'CAT',clue:'Build the word: 🐱 A pet that says “meow”.'},
+{word:'BAT',clue:'Build the word: 🦇 An animal that can fly at night.'},
+{word:'FISH',clue:'Build the word: 🐟 An animal that swims in water.'},
+{word:'SHIP',clue:'Build the word: 🚢 A large boat.'},
+{word:'FROG',clue:'Build the word: 🐸 A green animal that can jump.'},
+{word:'HEN',clue:'Build the word: 🐔 A farm bird that lays eggs.'},
+{word:'PIG',clue:'Build the word: 🐷 A pink farm animal.'},
+{word:'DUCK',clue:'Build the word: 🦆 A bird that says “quack”.'},
+{word:'FAN',clue:'Build the word: 🌬️ It helps you feel cool.'}
+];
+let deck=[],qi=0,score=0,lives=3,running=false,soundOn=true,selected=null,hands=null,stream=null,lastPoint=null,lastAction=0,handLoop=false,particles=[],trails=[];
+const $=id=>document.getElementById(id),video=$('webcam'),stage=$('stage'),slotsEl=$('slots'),lettersEl=$('letters'),canvas=$('fx'),ctx=canvas.getContext('2d');
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+function resize(){let r=stage.getBoundingClientRect();canvas.width=Math.round(r.width*devicePixelRatio);canvas.height=Math.round(r.height*devicePixelRatio);ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}new ResizeObserver(resize).observe(stage);resize();
+function beep(f=550,d=.12,type='sine'){if(!soundOn)return;try{let ac=beep.ac||(beep.ac=new(window.AudioContext||window.webkitAudioContext)()),o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(.12,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+function say(t){$('message').textContent=t}
+function pronounceWord(word){
+  if(!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.lang = 'en-GB';
+    utterance.rate = 0.72;
+    utterance.pitch = 1.08;
+    window.speechSynthesis.speak(utterance);
+  } catch(e) {}
+}
+function stats(){$('score').textContent=score;$('topScore').textContent=score;$('lives').textContent='💖'.repeat(lives)+'🤍'.repeat(3-lives);$('topLives').textContent=lives;$('progress').textContent=Math.min(qi+1,10)+'/10';if($('builtCount'))$('builtCount').textContent=Math.min(qi,10)+'/10';$('mission').textContent='MISSION '+Math.min(qi+1,10)+' / 10'}
+function drawQuestion(){if(qi>=deck.length){finish(true);return}selected=null;let q=deck[qi];$('prompt').textContent=q.clue;$('hint').textContent='Use mind force to move each letter into a slot.';slotsEl.innerHTML='';lettersEl.innerHTML='';
+for(let i=0;i<q.word.length;i++){let s=document.createElement('div');s.className='slot';s.dataset.slot=i;s.setAttribute('aria-label','Empty letter slot '+(i+1));s.addEventListener('click',()=>placeSelected(i));slotsEl.appendChild(s)}
+shuffle(q.word.split('')).forEach((ch,i)=>{let e=document.createElement('div');e.className='letter';e.textContent=ch;e.dataset.id='letter-'+i;e.dataset.used='false';e.draggable=true;e.addEventListener('click',()=>selectLetter(e));e.addEventListener('dragstart',ev=>{selected=e;ev.dataTransfer.setData('text/plain',e.dataset.id)});lettersEl.appendChild(e)});
+[...slotsEl.children].forEach(s=>{s.addEventListener('dragover',e=>e.preventDefault());s.addEventListener('drop',e=>{e.preventDefault();let id=e.dataTransfer.getData('text/plain'),el=[...lettersEl.children].find(x=>x.dataset.id===id);if(el)putInSlot(el,s)})});stats();$('resetBtn').disabled=false}
+function selectLetter(e){if(!running||e.dataset.used==='true')return;selected=e;document.querySelectorAll('.letter').forEach(x=>x.classList.toggle('selected',x===e));say('Selected '+e.textContent+'. Move to an empty slot!');beep(430,.06)}
+function placeSelected(i){if(!running||!selected)return;let s=slotsEl.children[i];if(s&&!s.dataset.filled)putInSlot(selected,s)}
+function putInSlot(e,s){if(!running||e.dataset.used==='true'||s.dataset.filled)return;s.textContent=e.textContent;s.classList.add('filled');s.dataset.filled='true';s.dataset.letter=e.textContent;e.dataset.used='true';e.classList.remove('selected','hovered');e.classList.add('used');e.draggable=false;selected=null;
+let r=s.getBoundingClientRect(),sr=stage.getBoundingClientRect();for(let i=0;i<10;i++)particles.push({x:r.left-sr.left+r.width/2,y:r.top-sr.top+r.height/2,vx:(Math.random()-.5)*5,vy:(Math.random()-.5)*5,life:22});beep(640,.08);checkWord()}
+function checkWord(){let ss=[...slotsEl.children];if(ss.some(s=>!s.dataset.filled))return;let formed=ss.map(s=>s.dataset.letter).join('');if(formed===deck[qi].word){score+=10;beep(800,.12);setTimeout(()=>beep(1050,.16),90);say('🌈 Fantastic! '+formed+' is correct! Listen and repeat! +10 points');pronounceWord(formed);stats();qi++;setTimeout(()=>{if(running)drawQuestion()},800)}else{lives--;beep(170,.22,'sawtooth');stats();say('Almost! That spelling is not right. Try the word again.');if(lives<=0){setTimeout(()=>finish(false),500);return}setTimeout(()=>{if(running)drawQuestion()},900)}}
+function clearWord(){if(!running)return;selected=null;drawQuestion();say('Word cleared. Try again, Mind Master!')}
+function finish(won){running=false;$('resetBtn').disabled=true;$('endTitle').textContent=won?'🏆 Mind Master!':'💫 Keep Practising!';$('endText').textContent=won?'You built all 10 words! Final score: '+score+' points. Amazing phonics skills!':'Your score is '+score+' points. Keep practising your spelling and try again!';$('end').classList.remove('hidden');beep(won?900:180,.3,won?'triangle':'sawtooth')}
+async function start(){$('intro').classList.add('hidden');$('end').classList.add('hidden');qi=0;score=0;lives=3;running=true;deck=shuffle(bank);stats();drawQuestion();say('Starting camera… allow webcam access if prompted.');
+try{if(!navigator.mediaDevices?.getUserMedia)throw Error('Webcam needs localhost or HTTPS in this browser.');stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});video.srcObject=stream;await video.play();$('cameraStatus').textContent='🟢 Camera ready';if(!window.Hands)throw Error('MediaPipe failed to load. Check internet connection.');hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.6,minTrackingConfidence:.5});hands.onResults(onResults);handLoop=true;requestAnimationFrame(processHand);say('Camera ready! Point at a letter, then move to a slot.')}catch(e){$('cameraStatus').textContent='⚠️ Mouse mode';say('Hand control unavailable: '+e.message+' You can still play with mouse or touch.')}
+}
+async function processHand(){if(!handLoop)return;if(running&&hands&&video.readyState>=2){try{await hands.send({image:video})}catch(e){}}if(handLoop)requestAnimationFrame(processHand)}
+function onResults(res){if(!running)return;let r=stage.getBoundingClientRect(),w=r.width,h=r.height;if(res.multiHandLandmarks&&res.multiHandLandmarks.length){let lm=res.multiHandLandmarks[0],p={x:(1-lm[8].x)*w,y:lm[8].y*h};if(lastPoint){let d=Math.hypot(p.x-lastPoint.x,p.y-lastPoint.y);if(d>4)trails.push({x1:lastPoint.x,y1:lastPoint.y,x2:p.x,y2:p.y,life:10});if(d>13&&performance.now()-lastAction>380){let el=document.elementFromPoint(r.left+p.x,r.top+p.y);if(el?.closest('.letter')){let e=el.closest('.letter');if(e.dataset.used!=='true'&&selected!==e){selectLetter(e);lastAction=performance.now()}}else if(el?.closest('.slot')&&selected){let s=el.closest('.slot');if(!s.dataset.filled){putInSlot(selected,s);lastAction=performance.now()}}}}lastPoint=p}else lastPoint=null}
+function animate(){ctx.clearRect(0,0,canvas.width,canvas.height);trails=trails.filter(t=>t.life-->0);trails.forEach(t=>{ctx.globalAlpha=t.life/10;ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.shadowColor='#9d7cff';ctx.shadowBlur=14;ctx.beginPath();ctx.moveTo(t.x1,t.y1);ctx.lineTo(t.x2,t.y2);ctx.stroke()});ctx.shadowBlur=0;particles=particles.filter(p=>p.life-->0);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;ctx.globalAlpha=p.life/22;ctx.fillStyle=['#ff70b7','#6cf4ee','#ffe76d','#a8ff83'][p.life%4];ctx.fillRect(p.x,p.y,5,5)});ctx.globalAlpha=1;requestAnimationFrame(animate)}requestAnimationFrame(animate);
+$('startBtn').addEventListener('click',start);$('againBtn').addEventListener('click',start);$('resetBtn').addEventListener('click',clearWord);$('soundBtn').addEventListener('click',()=>{soundOn=!soundOn;$('soundBtn').textContent=soundOn?'🔊 Sound: ON':'🔇 Sound: OFF';if(soundOn)beep()});window.addEventListener('beforeunload',()=>{handLoop=false;if(stream)stream.getTracks().forEach(t=>t.stop())});
+})();
+</script></body></html>
